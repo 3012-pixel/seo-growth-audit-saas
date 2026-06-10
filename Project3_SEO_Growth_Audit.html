@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO & Growth Audit — StackFlow SaaS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #ffffff;
+    --ink: #0a0a0f;
+    --ink2: #1a1a2e;
+    --muted: #6b7280;
+    --rule: #e5e7eb;
+    --surface: #f9fafb;
+    --accent: #6d28d9;    /* deep violet */
+    --accent2: #10b981;   /* emerald */
+    --accent3: #f59e0b;   /* amber */
+    --bad: #ef4444;
+    --shadow: rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; margin:0; padding:0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Cover slide ── */
+  .cover {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1e1b4b 60%, #4c1d95 100%);
+    color: #fff;
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .cover::before {
+    content:'';
+    position:absolute;
+    right:-80px; top:-80px;
+    width:320px; height:320px;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(109,40,217,0.4) 0%, transparent 70%);
+  }
+  .cover-tag {
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:3px;
+    color:rgba(255,255,255,0.5);
+    font-family:'Syne',sans-serif;
+    margin-bottom:16px;
+  }
+  .cover h1 {
+    font-family:'Syne',sans-serif;
+    font-size:36px;
+    font-weight:800;
+    letter-spacing:-1px;
+    line-height:1.1;
+    max-width:540px;
+  }
+  .cover h1 span { color:#a78bfa; }
+  .cover-meta {
+    display:flex;
+    gap:32px;
+    font-size:12px;
+    color:rgba(255,255,255,0.55);
+    margin-top:20px;
+  }
+  .cover-meta strong { color:rgba(255,255,255,0.9); display:block; font-size:14px; margin-bottom:2px; }
+  .cover-score {
+    position:absolute;
+    right:48px; top:50%;
+    transform:translateY(-50%);
+    text-align:center;
+  }
+  .score-ring {
+    width:110px; height:110px;
+    border-radius:50%;
+    background: conic-gradient(#a78bfa 0deg, #a78bfa 205deg, rgba(255,255,255,0.1) 205deg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+  .score-ring::before {
+    content:'';
+    position:absolute;
+    width:84px; height:84px;
+    border-radius:50%;
+    background: linear-gradient(135deg,#1e1b4b,#0a0a0f);
+  }
+  .score-inner {
+    position:relative;
+    z-index:1;
+    text-align:center;
+  }
+  .score-inner .score-num {
+    font-family:'Syne',sans-serif;
+    font-size:28px;
+    font-weight:800;
+    color:#a78bfa;
+    line-height:1;
+  }
+  .score-inner .score-label {
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:rgba(255,255,255,0.5);
+    margin-top:2px;
+  }
+  .score-caption { font-size:11px; color:rgba(255,255,255,0.5); margin-top:8px; }
+
+  /* ── Content sections ── */
+  .content { padding: 32px 48px; }
+
+  .section-label {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .section-label .sec-num {
+    font-family:'Syne',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    color:var(--accent);
+    border:1.5px solid var(--accent);
+    border-radius:6px;
+    padding:3px 8px;
+    letter-spacing:1px;
+  }
+  .section-label h2 {
+    font-family:'Syne',sans-serif;
+    font-size:20px;
+    font-weight:700;
+    letter-spacing:-0.5px;
+  }
+
+  /* ── Executive summary ── */
+  .exec-grid {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin-bottom:32px;
+  }
+  .exec-card {
+    border-radius:12px;
+    padding:20px;
+    border:1.5px solid var(--rule);
+    position:relative;
+  }
+  .exec-card .e-icon { font-size:22px; margin-bottom:10px; }
+  .exec-card .e-title { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:8px; }
+  .exec-card .e-val { font-family:'Syne',sans-serif; font-size:24px; font-weight:700; }
+  .exec-card .e-desc { font-size:12px; color:var(--muted); margin-top:6px; line-height:1.5; }
+  .exec-card.good { border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.04); }
+  .exec-card.bad  { border-color:rgba(239,68,68,0.3);  background:rgba(239,68,68,0.04); }
+  .exec-card.warn { border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.04); }
+
+  /* ── Charts row ── */
+  .charts-row {
+    display:grid;
+    grid-template-columns:1.6fr 1fr;
+    gap:18px;
+    margin-bottom:32px;
+  }
+  .chart-panel {
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:22px;
+  }
+  .chart-panel h3 { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:4px; }
+  .chart-panel .c-sub { font-size:11px; color:var(--muted); margin-bottom:16px; }
+  .chart-wrap { height:190px; }
+
+  /* ── Keyword table ── */
+  .kw-table { width:100%; border-collapse:collapse; }
+  .kw-table thead th {
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--muted);
+    text-align:left;
+    padding:0 0 10px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .kw-table tbody tr { border-bottom:1px solid rgba(229,231,235,0.6); }
+  .kw-table tbody tr:hover { background:var(--surface); }
+  .kw-table tbody td { font-size:12px; padding:9px 0; }
+  .diff-pill {
+    font-size:10px; font-weight:600;
+    padding:2px 7px; border-radius:10px;
+  }
+  .diff-easy   { background:rgba(16,185,129,0.12); color:#059669; }
+  .diff-medium { background:rgba(245,158,11,0.12);  color:#d97706; }
+  .diff-hard   { background:rgba(239,68,68,0.12);   color:#dc2626; }
+  .opp-bar { height:6px; background:var(--rule); border-radius:3px; margin-top:4px; overflow:hidden; }
+  .opp-fill { height:100%; border-radius:3px; background: linear-gradient(90deg,var(--accent),#a78bfa); }
+
+  /* ── Recommendations ── */
+  .rec-grid {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin-bottom:32px;
+  }
+  .rec-card {
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:20px;
+  }
+  .rec-card .priority {
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    padding:3px 8px;
+    border-radius:20px;
+    margin-bottom:12px;
+    display:inline-block;
+  }
+  .priority-high   { background:rgba(239,68,68,0.1);  color:#dc2626; }
+  .priority-medium { background:rgba(245,158,11,0.1); color:#d97706; }
+  .priority-low    { background:rgba(16,185,129,0.1); color:#059669; }
+  .rec-card h4 { font-size:14px; font-weight:600; margin-bottom:6px; }
+  .rec-card p  { font-size:12px; color:var(--muted); line-height:1.6; }
+  .rec-card .impact-row {
+    display:flex;
+    gap:12px;
+    margin-top:12px;
+    font-size:11px;
+    font-weight:500;
+  }
+  .impact-tag {
+    padding:2px 8px;
+    border-radius:6px;
+    background:rgba(109,40,217,0.08);
+    color:var(--accent);
+  }
+
+  /* ── Competitive ── */
+  .comp-grid {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:32px;
+  }
+  .comp-card {
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:16px;
+    text-align:center;
+  }
+  .comp-card.self { border-color:var(--accent); background:rgba(109,40,217,0.04); }
+  .comp-name { font-size:13px; font-weight:600; margin-bottom:12px; }
+  .comp-metric { margin-bottom:8px; }
+  .comp-metric .m-val { font-size:18px; font-weight:700; font-family:'Syne',sans-serif; }
+  .comp-metric .m-label { font-size:10px; color:var(--muted); }
+  .comp-rank {
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    padding:3px 10px;
+    border-radius:20px;
+    margin-top:6px;
+  }
+
+  /* ── Roadmap ── */
+  .roadmap { display:flex; gap:0; margin-bottom:28px; }
+  .rm-phase {
+    flex:1;
+    position:relative;
+    padding:20px 20px 20px 24px;
+    border:1px solid var(--rule);
+    border-right:none;
+  }
+  .rm-phase:first-child { border-radius:10px 0 0 10px; }
+  .rm-phase:last-child  { border-right:1px solid var(--rule); border-radius:0 10px 10px 0; }
+  .rm-phase::after {
+    content:'›';
+    position:absolute;
+    right:-14px; top:50%;
+    transform:translateY(-50%);
+    font-size:20px;
+    color:var(--muted);
+    z-index:2;
+    background:var(--bg);
+    padding:2px;
+  }
+  .rm-phase:last-child::after { display:none; }
+  .rm-month { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:8px; }
+  .rm-title { font-size:13px; font-weight:600; margin-bottom:6px; }
+  .rm-items { font-size:11px; color:var(--muted); line-height:1.8; }
+
+  /* ── Footer ── */
+  .deck-footer {
+    background:var(--ink2);
+    color:rgba(255,255,255,0.55);
+    padding:16px 48px;
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+  }
+  .deck-footer strong { color:rgba(255,255,255,0.9); }
+
+  hr { border:none; border-top:1px solid var(--rule); margin:28px 0; }
+</style>
+</head>
+<body>
+
+<!-- ── COVER ── -->
+<div class="cover">
+  <div>
+    <div class="cover-tag">SEO & Growth Audit · Confidential</div>
+    <h1>Full-Funnel Growth Audit<br><span>StackFlow</span> · B2B SaaS</h1>
+    <div class="cover-meta">
+      <div><strong>Analyst</strong>Kumar Aditya</div>
+      <div><strong>Prepared for</strong>StackFlow GmbH, Berlin</div>
+      <div><strong>Date</strong>June 2025</div>
+      <div><strong>Scope</strong>SEO · Content · Paid · Conversion</div>
+    </div>
+  </div>
+  <div class="cover-score">
+    <div class="score-ring">
+      <div class="score-inner">
+        <div class="score-num">57</div>
+        <div class="score-label">/ 100</div>
+      </div>
+    </div>
+    <div class="score-caption">Overall Growth Score</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ── 01. Executive Summary ── -->
+  <div class="section-label">
+    <span class="sec-num">01</span>
+    <h2>Executive Summary</h2>
+  </div>
+
+  <div class="exec-grid">
+    <div class="exec-card bad">
+      <div class="e-icon">📉</div>
+      <div class="e-title">Organic Traffic</div>
+      <div class="e-val" style="color:#ef4444">-34%</div>
+      <div class="e-desc">YoY decline. Core product pages lost page-1 rankings for 14 high-intent keywords following Google's March 2024 update.</div>
+    </div>
+    <div class="exec-card warn">
+      <div class="e-icon">🎯</div>
+      <div class="e-title">Conversion Rate</div>
+      <div class="e-val" style="color:#f59e0b">1.8%</div>
+      <div class="e-desc">Below SaaS benchmark of 3.2%. Trial sign-up flow has 3 unnecessary friction points identified in audit.</div>
+    </div>
+    <div class="exec-card good">
+      <div class="e-icon">🚀</div>
+      <div class="e-title">Quick Win Potential</div>
+      <div class="e-val" style="color:#10b981">+62%</div>
+      <div class="e-desc">Estimated organic traffic uplift within 90 days by executing the 6 high-priority recommendations in this report.</div>
+    </div>
+  </div>
+
+  <!-- ── 02. Traffic & Keyword Analysis ── -->
+  <div class="section-label">
+    <span class="sec-num">02</span>
+    <h2>Traffic & Keyword Analysis</h2>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-panel">
+      <h3>Monthly Organic Traffic</h3>
+      <div class="c-sub">Sessions from organic search · 12 months · Google Analytics estimate</div>
+      <div class="chart-wrap"><canvas id="trafficChart"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <h3>Traffic by Channel</h3>
+      <div class="c-sub">Current acquisition mix</div>
+      <div class="chart-wrap"><canvas id="channelChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Keyword table -->
+  <div class="chart-panel" style="margin-bottom:32px">
+    <h3>Keyword Opportunity Matrix</h3>
+    <div class="c-sub" style="margin-bottom:16px">Top 8 target keywords ranked by opportunity score</div>
+    <table class="kw-table">
+      <thead>
+        <tr>
+          <th>Keyword</th>
+          <th>Monthly Volume</th>
+          <th>Current Rank</th>
+          <th>Difficulty</th>
+          <th>Opportunity Score</th>
+        </tr>
+      </thead>
+      <tbody id="kwBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ── 03. Competitive Benchmarking ── -->
+  <div class="section-label">
+    <span class="sec-num">03</span>
+    <h2>Competitive Benchmarking</h2>
+  </div>
+
+  <div class="comp-grid" id="compGrid"></div>
+
+  <!-- ── 04. Recommendations ── -->
+  <div class="section-label">
+    <span class="sec-num">04</span>
+    <h2>Strategic Recommendations</h2>
+  </div>
+
+  <div class="rec-grid" id="recGrid"></div>
+
+  <!-- ── 05. 90-Day Roadmap ── -->
+  <div class="section-label">
+    <span class="sec-num">05</span>
+    <h2>90-Day Execution Roadmap</h2>
+  </div>
+
+  <div class="roadmap">
+    <div class="rm-phase">
+      <div class="rm-month">Month 1 — Fix</div>
+      <div class="rm-title">Technical SEO Foundation</div>
+      <div class="rm-items">
+        ✓ Fix 47 broken internal links<br>
+        ✓ Compress images (-38% load time)<br>
+        ✓ Implement schema markup<br>
+        ✓ Core Web Vitals remediation
+      </div>
+    </div>
+    <div class="rm-phase">
+      <div class="rm-month">Month 2 — Build</div>
+      <div class="rm-title">Content & On-Page</div>
+      <div class="rm-items">
+        ✓ Refresh 6 underperforming pages<br>
+        ✓ Publish 4 long-form guides<br>
+        ✓ Rewrite meta titles/descriptions<br>
+        ✓ Internal linking architecture
+      </div>
+    </div>
+    <div class="rm-phase">
+      <div class="rm-month">Month 3 — Grow</div>
+      <div class="rm-title">Acquisition & Conversion</div>
+      <div class="rm-items">
+        ✓ Launch link-building campaign<br>
+        ✓ A/B test CTA copy (3 variants)<br>
+        ✓ Reduce sign-up flow to 3 steps<br>
+        ✓ Retargeting audience build
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Projected Impact ── -->
+  <div class="chart-panel" style="margin-bottom:20px">
+    <h3>Projected Traffic Recovery</h3>
+    <div class="c-sub">Estimated organic sessions with full roadmap execution vs. do-nothing baseline</div>
+    <div class="chart-wrap" style="height:170px"><canvas id="projChart"></canvas></div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- Footer -->
+<div class="deck-footer">
+  <span>Built by <strong>Kumar Aditya</strong> · SRH Berlin, M.A. International Management · 2025</span>
+  <span>Tools: Python (Pandas) · Chart.js · Ahrefs/SEMrush methodology · Simulated client dataset</span>
+</div>
+
+<script>
+Chart.defaults.color='#6b7280';
+Chart.defaults.borderColor='#e5e7eb';
+Chart.defaults.font.family='Inter';
+
+// Traffic chart
+const months=['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
+const traffic=[14200,13800,12900,11400,10200,9800,8900,8400,8100,8600,9200,9800];
+new Chart(document.getElementById('trafficChart'),{
+  type:'line',
+  data:{
+    labels:months,
+    datasets:[{
+      label:'Organic Sessions',
+      data:traffic,
+      borderColor:'#6d28d9',
+      backgroundColor:'rgba(109,40,217,0.08)',
+      borderWidth:2.5,
+      pointRadius:4,
+      pointBackgroundColor:'#6d28d9',
+      fill:true, tension:0.4
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{
+      y:{ grid:{color:'rgba(0,0,0,0.04)'}, ticks:{callback:v=>v>=1000?v/1000+'k':v} },
+      x:{ grid:{display:false} }
+    }
+  }
+});
+
+// Channel donut
+new Chart(document.getElementById('channelChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Organic Search','Direct','Paid Search','Social','Referral','Email'],
+    datasets:[{
+      data:[28,24,22,12,9,5],
+      backgroundColor:['#6d28d9','#6b7280','#10b981','#f59e0b','#3b82f6','#ef4444'],
+      borderColor:'#fff',borderWidth:3,hoverOffset:5
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    cutout:'62%',
+    plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10},padding:10}}}
+  }
+});
+
+// Keyword table
+const keywords=[
+  {kw:'project management software',vol:'40.5K',rank:23,diff:'hard',opp:88},
+  {kw:'task automation saas',vol:'12.1K',rank:11,diff:'medium',opp:76},
+  {kw:'team workflow tool',vol:'8.8K',rank:14,diff:'medium',opp:71},
+  {kw:'stackflow alternative',vol:'3.2K',rank:4,diff:'easy',opp:68},
+  {kw:'startup project tracker',vol:'5.4K',rank:18,diff:'medium',opp:65},
+  {kw:'agile sprint tool free',vol:'9.1K',rank:31,diff:'hard',opp:62},
+  {kw:'remote team dashboard',vol:'6.7K',rank:22,diff:'medium',opp:57},
+  {kw:'workflow automation b2b',vol:'14.3K',rank:45,diff:'hard',opp:51},
+];
+const kb=document.getElementById('kwBody');
+keywords.forEach(k=>{
+  const cls=k.diff==='easy'?'diff-easy':k.diff==='medium'?'diff-medium':'diff-hard';
+  kb.innerHTML+=`<tr>
+    <td><strong>${k.kw}</strong></td>
+    <td>${k.vol}</td>
+    <td>#${k.rank}</td>
+    <td><span class="diff-pill ${cls}">${k.diff}</span></td>
+    <td>
+      <div style="font-size:12px;font-weight:600;color:#6d28d9">${k.opp}/100</div>
+      <div class="opp-bar"><div class="opp-fill" style="width:${k.opp}%"></div></div>
+    </td>
+  </tr>`;
+});
+
+// Competitive benchmarking
+const comps=[
+  {name:'StackFlow (You)', da:28, backlinks:'1.2K', kw:340, rank:'#4', self:true},
+  {name:'Notion',          da:81, backlinks:'890K', kw:62400,rank:'#1', self:false},
+  {name:'Monday.com',      da:79, backlinks:'540K', kw:48100,rank:'#1', self:false},
+  {name:'Asana',           da:76, backlinks:'320K', kw:31200,rank:'#2', self:false},
+];
+const cg=document.getElementById('compGrid');
+comps.forEach(c=>{
+  const rankColors={'#1':'#10b981','#2':'#3b82f6','#3':'#f59e0b','#4':'#ef4444'};
+  const rColor=rankColors[c.rank]||'#ef4444';
+  cg.innerHTML+=`<div class="comp-card ${c.self?'self':''}">
+    <div class="comp-name">${c.name}${c.self?' 👤':''}</div>
+    <div class="comp-metric"><div class="m-val">${c.da}</div><div class="m-label">Domain Authority</div></div>
+    <div class="comp-metric"><div class="m-val" style="font-size:14px">${c.backlinks}</div><div class="m-label">Backlinks</div></div>
+    <div class="comp-metric"><div class="m-val" style="font-size:14px">${c.kw}</div><div class="m-label">Ranking Keywords</div></div>
+    <span class="comp-rank" style="background:${rColor}22;color:${rColor}">SERP Avg ${c.rank}</span>
+  </div>`;
+});
+
+// Recommendations
+const recs=[
+  {priority:'HIGH', icon:'🛠',title:'Fix Core Web Vitals',
+   desc:'LCP at 5.2s (target <2.5s). Compress hero images and defer non-critical JS. Estimated 0.8 ranking position gain.',
+   tags:['Impact: High','Effort: Low','Timeline: 2 weeks']},
+  {priority:'HIGH', icon:'✍️',title:'Refresh Pillar Content',
+   desc:'6 pages ranking on page 2 have thin content (<800 words). Expand to 2,000+ with expert quotes and data.',
+   tags:['Impact: High','Effort: Medium','Timeline: 4 weeks']},
+  {priority:'HIGH', icon:'🔗',title:'Internal Linking Overhaul',
+   desc:'47 orphaned pages receiving zero internal links. Implementing hub-and-spoke model will distribute page authority.',
+   tags:['Impact: High','Effort: Low','Timeline: 1 week']},
+  {priority:'MEDIUM',icon:'🎯',title:'Conversion Rate Optimisation',
+   desc:'Reduce sign-up flow from 7 steps to 3. Remove mandatory credit card for trial. Benchmark: +1.4pp CVR lift.',
+   tags:['Impact: High','Effort: Medium','Timeline: 3 weeks']},
+  {priority:'MEDIUM',icon:'📣',title:'Digital PR & Link Building',
+   desc:'Current DA of 28 vs competitors 76+. Target 15 DR40+ placements in SaaS/productivity media in Q3.',
+   tags:['Impact: Medium','Effort: High','Timeline: 90 days']},
+  {priority:'LOW',   icon:'📊',title:'Paid Search Efficiency',
+   desc:'CPC €8.40 with 1.2% CVR. Narrow targeting to bottom-of-funnel keywords. Estimated CPA reduction of 35%.',
+   tags:['Impact: Medium','Effort: Low','Timeline: 2 weeks']},
+];
+const rg=document.getElementById('recGrid');
+recs.forEach(r=>{
+  const pClass=r.priority==='HIGH'?'priority-high':r.priority==='MEDIUM'?'priority-medium':'priority-low';
+  rg.innerHTML+=`<div class="rec-card">
+    <span class="priority ${pClass}">${r.priority}</span>
+    <h4>${r.icon} ${r.title}</h4>
+    <p>${r.desc}</p>
+    <div class="impact-row">${r.tags.map(t=>`<span class="impact-tag">${t}</span>`).join('')}</div>
+  </div>`;
+});
+
+// Projection chart
+new Chart(document.getElementById('projChart'),{
+  type:'line',
+  data:{
+    labels:['Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets:[
+      {
+        label:'With Roadmap',
+        data:[9800,10400,12100,14300,16800,18500,20200],
+        borderColor:'#10b981',
+        backgroundColor:'rgba(16,185,129,0.08)',
+        borderWidth:2.5,fill:true,tension:0.4,
+        pointRadius:4,pointBackgroundColor:'#10b981'
+      },
+      {
+        label:'Do Nothing (Baseline)',
+        data:[9800,9200,8600,8100,7800,7500,7200],
+        borderColor:'#ef4444',
+        backgroundColor:'rgba(239,68,68,0.05)',
+        borderWidth:2,borderDash:[6,4],fill:true,tension:0.4,
+        pointRadius:3,pointBackgroundColor:'#ef4444'
+      }
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},
+    scales:{
+      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>v>=1000?v/1000+'k':v}},
+      x:{grid:{display:false}}
+    }
+  }
+});
+</script>
+</body>
+</html>
